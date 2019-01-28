@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# Create Azure resources for MCW lab Environment 
+# https://github.com/Microsoft/MCW-Intelligent-analytics/blob/master/Hands-on%20lab/HOL%20step-by-step%20-%20Intelligent%20analytics.md#exercise-2-implement-message-forwarding
+# 2019. 1.16
+
+# Select Azure subscription
+az account list --output table
+
+echo "\n\r"
+read -p "Subscription Name for lab>>" subName
+
+if [ ! -z "$subName" ]; then
+    echo "You select " $subName " for the lab."
+    az account set --subscription "$subName" --verbose
+else
+    echo "Please run the script again!! EXIT"
+    exit
+fi
+
+chkName=$(az account list --output tsv --query "[?isDefault].name")
+
+if [ "$subName" = "$chkName" ]; then
+    echo "Subscripion Name has confirmed"
+else 
+    echo "Please try again with correct subscription name"
+    exit
+fi
+
+# Set region
+echo "\n\r"
+az account list-locations --output table --query []['name','displayName']
+echo "Type location for the lab"
+read -p "Location >>" loc
+
+if [ ! -z "$loc" ]; then
+    echo "You set location" $loc " for the lab."
+else
+    echo "Default location is West US 2"
+    loc=westus2
+fi
+
+# Set Azure Resource Group Name
+echo "\n\r"
+echo "Type Azure Resource Group Name for the lab"
+read -p "Azure Resource Group Name >>" proName
+
+if [ ! -z "$proName" ]; 
+then
+    rgExists=$(az group exists -n $proName --output tsv)
+    if [ $rgExists = 'true' ]; 
+    then
+        echo "Your Azure Resource Group name is set existing " $proName " for the lab."
+    else 
+        echo "There is no resource group name that matches the name " $proName
+        echo $proName " will be created automatically"
+    fi
+else
+    proName='azlab'
+    echo "Your Azure Resource Group name will be set as " $proName " for this lab."
+fi
+
+# Services Names
+num=$(shuf -i0-1000 -n1)
+
+## Plan Name
+planName=$proName'-pln'$num
+
+## WebApp
+webName=$proName'-web'$num
+
+## API App
+apiName=$proName'-api'$num
+
+## Function
+funcName=$proName'-func'$num
+
+## Service Bus
+busName=$proName'-bus'$num
+
+## Event Hub
+ehubName=$proName'-hub'$num
+
+## Azure CosmosDB
+cosName=$proName'-db'$num
+
+## Azure Search
+seaName=$proName'-sea'$num
+
+## Azure Blob Storage`
+blobName=$proName'-blob'$num
+
+## Azure Stream Analytics 
+sajName=$proName'-saj'$num
+
+## Cognitive Services
+cogName=$proName'-cog'$num
+
+# Create Resource Group
+{
+    rgExists=$(az group exists -n $proName --output tsv)
+    if [ $rgExists = 'true' ]; 
+    then
+        echo "Use existing resource group "$proName
+    else
+        az group create --name $proName --location $loc
+    fi
+}||{
+    echo "Create Resource Group has failed"
+    exit
+}
+
+# Print out service 
+echo 'Azure Services for today lab: '
+echo $subName
+echo $loc
+echo $proName
+echo $webName
+echo $apiName
+echo $funcName
+echo $busName
+echo $ehubName
+echo $cosName
+echo $seaName
+echo $blobName
+echo $sajName
+echo $cogName
+
